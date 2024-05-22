@@ -1,0 +1,9 @@
+clear all; close all; clc;
+file_mask_young=   '/home/bhlab/Desktop/Dev_Maxilla/Segmentations/E10.0/Segmentation-RightMaxilla_Feb11_3-label.tiff';
+file_mask_old=   '/home/bhlab/Desktop/Dev_Maxilla/Segmentations/E10.5/e105-RightMaxilla-label.tiff';
+
+volYoung = sum(file_mask_young)
+volOld = sum (file_mask_old)
+
+growthFold = volOld/volYoung
+

@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MorpheusModel version="4">
+    <Description>
+        <Title>CustomInput-Proliferation2D</Title>
+        <Details>Illustrates Plugin CellDivision under CellTypes
+        
+        - here, any cell can divide symmetrically with probability p and daughters then increase their counter d of dividion rounds by 1 (plotted as number inside each cell)
+
+        - to highlight recent division events, both daughters are labeled red for some time (controled by a counter c as CellProperty)
+        
+        </Details>
+    </Description>
+    <Global>
+        <Variable symbol="c" value="0.0"/>
+    </Global>
+    <Space>
+        <Lattice class="hexagonal">
+            <Size symbol="size" value="500, 500, 0"/>
+            <BoundaryConditions>
+                <Condition type="periodic" boundary="x"/>
+                <Condition type="periodic" boundary="y"/>
+            </BoundaryConditions>
+            <Neighborhood>
+                <Order>1</Order>
+            </Neighborhood>
+        </Lattice>
+        <SpaceSymbol symbol="space"/>
+    </Space>
+    <Time>
+        <StartTime value="0"/>
+        <StopTime symbol="stoptime" value="200"/>
+        <TimeSymbol symbol="time"/>
+    </Time>
+    <CellTypes>
+        <CellType name="cells" class="biological">
+            <Property symbol="p" name="proliferation rate" value="5e-5"/>
+            <Property symbol="d" name="divisions" value="0"/>
+            <Property symbol="c" name="color" value="0"/>
+            <VolumeConstraint target="500" strength="1"/>
+            <SurfaceConstraint target="0.9" strength="1" mode="aspherity"/>
+            <System time-step="1.0" solver="Euler [fixed, O(1)]">
+                <Rule symbol-ref="c">
+                    <Expression>if( c > 0, c-1, 0)</Expression>
+                </Rule>
+            </System>
+            <CellDivision division-plane="major">
+                <Condition>rand_uni(0,1) &lt; p</Condition>
+                <Triggers>
+                    <Rule symbol-ref="d">
+                        <Expression>d+1</Expression>
+                    </Rule>
+                    <Rule symbol-ref="c" name="color after division">
+                        <Expression>1000</Expression>
+                    </Rule>
+                </Triggers>
+            </CellDivision>
+        </CellType>
+    </CellTypes>
+    <CPM>
+        <Interaction default="0">
+            <Contact type2="cells" type1="cells" value="-4"/>
+        </Interaction>
+        <MonteCarloSampler stepper="edgelist">
+            <MCSDuration value="1.0"/>
+            <Neighborhood>
+                <Order>1</Order>
+            </Neighborhood>
+            <MetropolisKinetics yield="0.1" temperature="3"/>
+        </MonteCarloSampler>
+        <ShapeSurface scaling="norm">
+            <Neighborhood>
+                <Order>3</Order>
+            </Neighborhood>
+        </ShapeSurface>
+    </CPM>
+    <CellPopulations>
+        <Population type="cells" size="1">
+            <TIFFReader filename="/home/bhlab/morpheus/Input_Tests/Testinput.tif"/>
+        </Population>
+    </CellPopulations>
+    <Analysis>
+        <Gnuplotter time-step="1000" decorate="false">
+            <Terminal name="png"/>
+            <Plot>
+                <Cells max="1" min="0.0" value="c">
+                    <ColorMap>
+                        <Color color="red" value="1"/>
+                        <Color color="green" value="0.0"/>
+                    </ColorMap>
+                </Cells>
+                <CellLabels fontsize="8" value="d"/>
+            </Plot>
+        </Gnuplotter>
+        <Logger time-step="100">
+            <Input>
+                <Symbol symbol-ref="celltype.cells.size"/>
+            </Input>
+            <Output>
+                <TextOutput/>
+            </Output>
+            <Plots>
+                <Plot time-step="10000" log-commands="true">
+                    <Style grid="true" style="linespoints" point-size="0.5"/>
+                    <Terminal terminal="png"/>
+                    <X-axis minimum="0" maximum="stoptime">
+                        <Symbol symbol-ref="time"/>
+                    </X-axis>
+                    <Y-axis minimum="0" maximum="100">
+                        <Symbol symbol-ref="celltype.cells.size"/>
+                    </Y-axis>
+                </Plot>
+            </Plots>
+        </Logger>
+        <ModelGraph include-tags="#untagged" reduced="false" format="svg"/>
+    </Analysis>
+</MorpheusModel>
